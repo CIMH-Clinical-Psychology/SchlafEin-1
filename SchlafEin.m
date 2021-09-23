@@ -328,7 +328,7 @@ function SE_create_window
     SED.objects.freebuttons(7).Callback = @SE_buttonpush;    
     SED.objects.freebuttons(8) = uicontrol('Style','togglebutton', 'FontUnits', 'normalized', 'FontSize', 0.5, 'String','MT', ... 
         'Units','normalized', 'Position',[0.37 0.95 0.05 0.05]);
-    SED.objects.freebuttons(8).Callback = @SE_buttonpush;    
+    SED.objects.freebuttons(8).Callback = @SE_buttonpush;
 
     if SED.hori
         SED.objects.hoributtons = gobjects([10,1]);
@@ -415,7 +415,10 @@ function SE_create_window
     SED.objects.ctrlbuttons(16).Callback = @SE_ctrlbuttonpush;    
     SED.objects.ctrlbuttons(17) = uicontrol('Style','pushbutton', 'FontUnits', 'normalized', 'FontSize', 0.5, 'String','FB', 'TooltipString', 'Set Frequency Bands', ... 
         'Units','normalized', 'Position',[0.57 0 0.05 0.05]);
-    SED.objects.ctrlbuttons(17).Callback = @SE_find_spectral_bands;    
+    SED.objects.ctrlbuttons(17).Callback = @SE_find_spectral_bands;
+    SED.objects.ctrlbuttons(18) = uicontrol('Style','pushbutton', 'FontUnits', 'normalized', 'FontSize', 0.5, 'String','CS', 'TooltipString', 'Current Stage Refresh', ... 
+        'Units','normalized', 'Position',[0.7 0.95 0.05 0.05]);
+    SED.objects.ctrlbuttons(18).Callback = @SE_ctrlbuttonpush;   
 end
 
 function SE_buttonpush(src,~)
@@ -705,6 +708,28 @@ function SE_ctrlbuttonpush(src,~)
             SE_refreshax;
             SE_plot;
             uicontrol(SED.objects.selbuttons(1));
+        % new addition
+        case 'CS'
+            switch SED.score.stage((SED.display.position/SED.display.epochlength)+1)
+                case 0 
+                    stg_name = 'None';
+                case 1
+                    stg_name = 'W';
+                case 2
+                    stg_name = 'S1';
+                case 3
+                    stg_name = 'S2';
+                case 4
+                    stg_name = 'S3';
+                case 5
+                    stg_name = 'S4';
+                case 6
+                    stg_name = 'R';
+                case 8
+                    stg_name = 'MT';
+            end
+            SED.objects.freebuttons(9) = uicontrol('Style','text', 'FontUnits', 'normalized', 'FontSize', 0.5, 'String', stg_name, ... 
+        'Units','normalized', 'Position',[0.64 0.94 0.05 0.05]);
         case 'RE'
             dt = strfind(SED.filename,'.');
             
