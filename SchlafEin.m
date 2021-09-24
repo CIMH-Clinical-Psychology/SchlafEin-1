@@ -110,6 +110,26 @@ function SE_plot
         SED.objects.axes(ch).YAxis.Label.String = SED.header.channelinfos(chns(ch)).labels{1};
         SED.objects.axes(ch).FontUnits = 'normalized';
         SED.objects.axes(ch).FontSize = 0.025/SED.objects.axes(ch).Position(4);
+        
+        switch SED.score.stage((SED.display.position/SED.display.epochlength)+1)
+                case 0 
+                    stg_name = 'None';
+                case 1
+                    stg_name = 'W';
+                case 2
+                    stg_name = 'S1';
+                case 3
+                    stg_name = 'S2';
+                case 4
+                    stg_name = 'S3';
+                case 5
+                    stg_name = 'S4';
+                case 6
+                    stg_name = 'R';
+                case 8
+                    stg_name = 'MT';
+        end
+              
         if ch==1
             for i=1:6
                 if SED.score.hori(page,i)
@@ -122,6 +142,7 @@ function SE_plot
             y = double(YLim(1)+(YLim(2)-YLim(1))/10:(YLim(2)-YLim(1))/5:YLim(2));
             for i=1:5
                 t = text(SED.objects.axes(ch), x(end)+0.1, y(i), frqb{i});
+                text(SED.objects.axes(ch), horipos(i), 0, -1, stg_name,'color','red', 'FontSize',15); % add current sleep stage
 %               text(SED.objects.axes(ch), x(end)+0.1, y(i), [num2str(SED.frqs(i)) '-' num2str(SED.frqs(i+1))]);
                 t.FontUnits = 'normalized';
                 t.FontSize = 0.125;
@@ -415,10 +436,7 @@ function SE_create_window
     SED.objects.ctrlbuttons(16).Callback = @SE_ctrlbuttonpush;    
     SED.objects.ctrlbuttons(17) = uicontrol('Style','pushbutton', 'FontUnits', 'normalized', 'FontSize', 0.5, 'String','FB', 'TooltipString', 'Set Frequency Bands', ... 
         'Units','normalized', 'Position',[0.57 0 0.05 0.05]);
-    SED.objects.ctrlbuttons(17).Callback = @SE_find_spectral_bands;
-    SED.objects.ctrlbuttons(18) = uicontrol('Style','pushbutton', 'FontUnits', 'normalized', 'FontSize', 0.5, 'String','CS', 'TooltipString', 'Current Stage Refresh', ... 
-        'Units','normalized', 'Position',[0.7 0.95 0.05 0.05]);
-    SED.objects.ctrlbuttons(18).Callback = @SE_ctrlbuttonpush;   
+    SED.objects.ctrlbuttons(17).Callback = @SE_find_spectral_bands; 
 end
 
 function SE_buttonpush(src,~)
@@ -708,28 +726,6 @@ function SE_ctrlbuttonpush(src,~)
             SE_refreshax;
             SE_plot;
             uicontrol(SED.objects.selbuttons(1));
-        % new addition
-        case 'CS'
-            switch SED.score.stage((SED.display.position/SED.display.epochlength)+1)
-                case 0 
-                    stg_name = 'None';
-                case 1
-                    stg_name = 'W';
-                case 2
-                    stg_name = 'S1';
-                case 3
-                    stg_name = 'S2';
-                case 4
-                    stg_name = 'S3';
-                case 5
-                    stg_name = 'S4';
-                case 6
-                    stg_name = 'R';
-                case 8
-                    stg_name = 'MT';
-            end
-            SED.objects.freebuttons(9) = uicontrol('Style','text', 'FontUnits', 'normalized', 'FontSize', 0.5, 'String', stg_name, ... 
-        'Units','normalized', 'Position',[0.64 0.94 0.05 0.05]);
         case 'RE'
             dt = strfind(SED.filename,'.');
             
