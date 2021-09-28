@@ -2,7 +2,6 @@
 % Simple help for sleep scoring
 % 16.09.2021 Version 0.946beta Steffen Gais
 % 0.946 - initial version for GitHub
-
 function SchlafEin
     global SED
     global SEversion
@@ -68,6 +67,8 @@ function SE_plot
     st = SED.header.commoninfos.starttime+SED.display.position/(24*60*60);
     horipos = x(1) + (2.5:5:27.5);
     
+%     plot(SED.objects.axes(nch), pspectrum(SED.data(1,:),200,'spectrogram'))
+    
     for ch = 1:nch
 %       mi = min(SED.data(chns(ch),pos:pos+len-1));     % this is useful if plots are not mean-centered
 %       ma = max(SED.data(chns(ch),pos:pos+len-1));
@@ -87,7 +88,7 @@ function SE_plot
             axis(SED.objects.axes(ch),[x(1),x(end-1),a(3),a(4)]);
         end
         plot(SED.objects.axes(ch), x(1:end-1), SED.data(chns(ch),pos:pos+len-1)-mean(SED.data(chns(ch),pos:pos+len-1)), 'k');
-
+        
         SED.objects.axes(ch).YLim = YLim;
 %       if mi<-SED.display.ranges(chns(ch)) || ma>SED.display.ranges(chns(ch))
 %           SED.objects.axes(ch).YColor = 'r';
@@ -126,6 +127,8 @@ function SE_plot
                     stg_name = 'S4';
                 case 6
                     stg_name = 'R';
+                case 7
+                    stg_name = 'MA';
                 case 8
                     stg_name = 'MT';
         end
@@ -295,6 +298,121 @@ function SE_hypnogram
     end
 end
 
+function SE_timefreq
+    global SED
+
+    if ~SED.display.timefreq
+        return
+    end
+
+    if ~isfield(SED.objects, 'tfwindow') || isempty(SED.objects.tfwindow) || ~isvalid(SED.objects.tfwindow)
+        len = round(SED.display.epochlength * SED.header.commoninfos.samplingrate);
+        maxpage = floor(SED.header.commoninfos.datapoints/len);
+        SED.objects.tfwindow = figure;
+        set(SED.objects.tfwindow, 'NumberTitle','off');
+        set(SED.objects.tfwindow, 'Name','SchlafEin Time-Frequency Plot');
+        set(SED.objects.tfwindow, 'Units', 'normalized', 'OuterPosition', SED.display.hypwindowsize);
+        SED.objects.tfaxes = gobjects(2,1);
+        SED.objects.tfaxes(1) = axes('Units','normalized', 'Position',[0.1 0.20 0.85 0.75]);
+%         SED.objects.tfaxes(2) = axes('Units','normalized', 'Position',[0.1 0.05 0.85 0.10]);
+        SED.objects.tfaxes(1).FontUnits = 'normalized';
+        SED.objects.tfaxes(1).FontSize = 0.075;
+%         SED.objects.tfaxes(2).FontUnits = 'normalized';
+%         SED.objects.tfaxes(2).FontSize = 0.35;
+        SED.objects.tfwindow.MenuBar = 'none';
+        SED.objects.tfwindow.ToolBar = 'none';
+        SED.objects.tfwindow.WindowKeyPressFcn = @SE_keypress;
+        SED.objects.tfwindow.WindowButtonDownFcn = @SE_hypclick;
+
+        set(SED.objects.tfwindow,'CloseRequestFcn','global SED; set(SED.objects.tfwindow,"Visible","off"); SED.display.timefreq = 0;');
+
+%         SED.objects.tfaxes(1).XAxis.Visible = 'off';
+%         SED.objects.tfaxes(1).Box = 'off';
+%         SED.objects.tfaxes(1).TickLength = [0 0];
+%         SED.objects.tfaxes(1).XLim = [1 maxpage];
+%         SED.objects.tfaxes(1).YLim = [0.5 5.5];
+%         SED.objects.tfaxes(1).YDir = 'reverse';
+%         SED.objects.tfaxes(1).YTick = [1 1.5 2 3 4 5];
+%         SED.objects.tfaxes(1).YTickLabel = {'W' 'REM' 'S1' 'S2' 'S3' 'S4'};
+
+%         SED.objects.tfaxes(2).Box = 'off';
+%         SED.objects.tfaxes(2).XLim = [1 maxpage];
+%         SED.objects.tfaxes(2).YLim = [0 2];
+%         SED.objects.tfaxes(2).TickLength = [0 0];
+%         SED.objects.tfaxes(2).YTick = [0.5 1.5];
+%         SED.objects.tfaxes(2).YTickLabel = {'MA' 'MT'};
+%         pause(0.2);
+%         SED.objects.tfaxes(1).YRuler.Axle.Visible = 'off';
+%         SED.objects.tfaxes(2).YRuler.Axle.Visible = 'off';
+    else
+        figure(SED.objects.tfwindow);
+    end
+    warning('off', 'MATLAB:HandleGraphics:ObsoletedProperty:JavaFrame');
+    warning('off','MATLAB:ui:javaframe:PropertyToBeRemoved');
+%     jFrame = get(SED.objects.tfwindow,'JavaFrame');
+%     jFrame.fHG2Client.getWindow.setAlwaysOnTop(true);
+    
+    pspectrum(SED.data(1,:),200,'spectrogram','TimeResolution',1,'FrequencyLimits',[0 60])
+    colormap jet
+    
+%     cla(SED.objects.tfaxes(1));
+%     cla(SED.objects.tfaxes(2));
+%     plotcolor = SED.objects.tfaxes(2).XColor;
+%     stages = SED.score.stage;
+%     moves = SED.score.movement;
+%     if (stages(1)==8)
+%         stages(1) = 0;
+%     end
+%     stages(stages==6)=1.5;
+%     m = find(stages==8);
+%     while ~isempty(m)
+%         stages(m) = stages(m-1);
+%         m = find(stages==8);
+%     end
+% 
+%     line(SED.objects.hypnoaxes(1), [SED.display.position/SED.display.epochlength, SED.display.position/SED.display.epochlength], [0.5, 5.5], 'Color', [0.7 0.7 0.7]);
+%     s = find(stages(2:end) ~= stages(1:end-1));
+%     ox = 1;
+%     oy = stages(ox);
+%     for i=1:length(s)
+%         nx = s(i)+0.5;
+%         ny = stages(s(i)+1);
+%         if oy
+%             line(SED.objects.hypnoaxes(1), [ox nx], [oy oy], 'Color', plotcolor);
+%             if ny
+%                 line(SED.objects.hypnoaxes(1), [nx nx], [oy ny], 'Color', plotcolor);
+%             end
+%         else
+%             if ny
+%                 line(SED.objects.hypnoaxes(1), [nx nx], [ny ny], 'Color', plotcolor);
+%             end
+%         end
+%         ox = nx;
+%         oy = ny;
+%     end
+%     
+%     r = (stages==1.5);
+%     s = find(r(2:end)>r(1:end-1));
+%     if r(1)
+%         s = [1; s];
+%     end
+%     e = find(r(2:end)<r(1:end-1));
+%     if r(end)
+%         e = [e; length(r)];
+%     end
+%     e = e-s;
+%     for i=1:length(s)
+%         rectangle(SED.objects.tfaxes(1), 'Position',[s(i)+0.5 1.25 e(i) 0.5], 'EdgeColor', plotcolor, 'FaceColor', plotcolor);
+%     end
+%     
+%     x = repmat(find(moves),1,2);
+%     y = [zeros(sum(moves>0),1) moves(moves>0)];
+%     for i=1:size(x,1)
+%         line(SED.objects.tfaxes(2), x(i,:), y(i,:), 'Color', plotcolor);
+%     end
+end
+
+
 function SE_create_window
     global SED
 
@@ -317,7 +435,9 @@ function SE_create_window
 
     nch = SED.header.commoninfos.numberofchannels;
     SED.objects.axes = gobjects(nch,1);
+%     SED.objects.axes(5,:) = SED.objects.axes(4,:);
     SED.objects.selbuttons = gobjects(nch,1);
+%     SED.objects.selbuttons(5,:) = SED.objects.selbuttons(4,:);
     height = 0.8/nch;
     for ch = 1:nch
         SED.objects.axes(ch) = axes('Units','normalized', 'Position',[0.075 1-(0.07+(ch*height)) 0.9 height-height/10]);
@@ -436,7 +556,10 @@ function SE_create_window
     SED.objects.ctrlbuttons(16).Callback = @SE_ctrlbuttonpush;    
     SED.objects.ctrlbuttons(17) = uicontrol('Style','pushbutton', 'FontUnits', 'normalized', 'FontSize', 0.5, 'String','FB', 'TooltipString', 'Set Frequency Bands', ... 
         'Units','normalized', 'Position',[0.57 0 0.05 0.05]);
-    SED.objects.ctrlbuttons(17).Callback = @SE_find_spectral_bands; 
+    SED.objects.ctrlbuttons(17).Callback = @SE_find_spectral_bands;
+    SED.objects.ctrlbuttons(18) = uicontrol('Style','pushbutton', 'FontUnits', 'normalized', 'FontSize', 0.5, 'String','TF', 'TooltipString', 'Time-Frequency Plot', ... 
+        'Units','normalized', 'Position',[0.70 0.95 0.05 0.05]);
+    SED.objects.ctrlbuttons(18).Callback = @SE_ctrlbuttonpush;
 end
 
 function SE_buttonpush(src,~)
@@ -574,6 +697,10 @@ function SE_ctrlbuttonpush(src,~)
         case 'HY'
             SED.display.hypnogram = 1;
             SE_hypnogram;
+%       add a button and its check for PSD
+        case 'TF'
+            SED.display.timefreq = 1;
+            SE_timefreq;
         case 'L'
             if SED.objects.ctrlbuttons(4).Value
                 SED.objects.window.WindowButtonMotionFcn = @SE_mousemoveline;
@@ -1195,7 +1322,9 @@ function SE_refreshax
     chns = find(~SED.display.hiddenchans);
     nch = length(chns);
     SED.objects.axes = gobjects(nch,1);
+%     SED.objects.axes(5,:) = SED.objects.axes(4,:);
     SED.objects.selbuttons = gobjects(nch,1);
+%     SED.objects.selbuttons(5,:) = SED.objects.selbuttons(4,:);
     height = 0.8/nch;
     for ch = 1:nch
         SED.objects.selbuttons(ch) = uicontrol('Style','checkbox', 'Value', 1, ... 
